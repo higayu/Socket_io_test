@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リアルタイムじゃんけんゲーム</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .game-container {
+            margin-top: 20px;
+        }
+        .choices {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .choice-btn {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .choice-btn:hover {
+            background-color: #45a049;
+        }
+        .status {
+            margin: 20px 0;
+            font-size: 18px;
+        }
+        .result {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>リアルタイムじゃんけんゲーム</h1>
+    <div class="game-container">
+        <button id="joinBtn" class="choice-btn">ゲームに参加</button>
+        <div id="waitingStatus" class="status hidden">対戦相手を待っています...</div>
+        <div id="gameArea" class="hidden">
+            <div class="status">じゃんけんを選んでください！</div>
+            <div class="choices">
+                <button class="choice-btn" data-choice="rock">✊</button>
+                <button class="choice-btn" data-choice="scissors">✌️</button>
+                <button class="choice-btn" data-choice="paper">✋</button>
+            </div>
+        </div>
+        <div id="result" class="result hidden"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const joinBtn = document.getElementById('joinBtn');
+        const waitingStatus = document.getElementById('waitingStatus');
+        const gameArea = document.getElementById('gameArea');
+        const resultDiv = document.getElementById('result');
+        const choiceBtns = document.querySelectorAll('.choice-btn[data-choice]');
+
+        joinBtn.addEventListener('click', () => {
+            socket.emit('join');
+            joinBtn.classList.add('hidden');
+            waitingStatus.classList.remove('hidden');
+        });
+
+        socket.on('waiting', () => {
+            waitingStatus.classList.remove('hidden');
+        });
+
+        socket.on('gameStart', () => {
+            waitingStatus.classList.add('hidden');
+            gameArea.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+        });
+
+        choiceBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const choice = btn.dataset.choice;
+                socket.emit('choice', choice);
+                choiceBtns.forEach(b => b.disabled = true);
+            });
+        });
+
+        socket.on('result', (data) => {
+            gameArea.classList.add('hidden');
+            resultDiv.classList.remove('hidden');
+            
+            let resultText = '';
+            switch(data.result) {
+                case 'win':
+                    resultText = 'あなたの勝ちです！';
+                    break;
+                case 'lose':
+                    resultText = 'あなたの負けです...';
+                    break;
+                case 'draw':
+                    resultText = '引き分けです！';
+                    break;
+            }
+            
+            resultDiv.textContent = resultText;
+            
+            // 3秒後にゲームをリセット
+            setTimeout(() => {
+                resultDiv.classList.add('hidden');
+                joinBtn.classList.remove('hidden');
+                choiceBtns.forEach(b => b.disabled = false);
+            }, 3000);
+        });
+    </script>
+</body>
+</html> 
