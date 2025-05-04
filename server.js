@@ -109,6 +109,21 @@ io.on('connection', (socket) => {
     if (opponent) {
       const opponentPlayer = players.get(opponent[0]);
       
+      // カードの状態を更新
+      io.to(socket.id).emit('cardPlayed', {
+        card,
+        playerField: player.field,
+        opponentField: opponentPlayer.field.map(c => ({ ...c, hidden: false })),
+        hand: player.hand
+      });
+
+      io.to(opponent[0]).emit('opponentCardPlayed', {
+        card: { ...card, hidden: true }, // 相手のカードは裏向き
+        playerField: opponentPlayer.field.map(c => ({ ...c, hidden: false })),
+        opponentField: player.field.map(c => ({ ...c, hidden: true })), // 相手のフィールドは裏向き
+        hand: opponentPlayer.hand
+      });
+
       // 両者がカードを出した場合のみ勝敗判定
       if (player.field.length > 0 && opponentPlayer.field.length > 0) {
         const playerCard = player.field[player.field.length - 1];
@@ -125,6 +140,17 @@ io.on('connection', (socket) => {
           // スコア加算（奴隷側の勝利は5倍）
           winningPlayer.score += isSlaveWin ? 5 : 1;
           
+          // 勝敗が決まったら両者のカードを公開
+          io.to(socket.id).emit('revealCards', {
+            playerField: player.field.map(c => ({ ...c, hidden: false })),
+            opponentField: opponentPlayer.field.map(c => ({ ...c, hidden: false }))
+          });
+          
+          io.to(opponent[0]).emit('revealCards', {
+            playerField: opponentPlayer.field.map(c => ({ ...c, hidden: false })),
+            opponentField: player.field.map(c => ({ ...c, hidden: false }))
+          });
+          
           io.to(socket.id).emit('gameOver', { 
             won: winner === socket.id, 
             score: player.score,
@@ -139,29 +165,18 @@ io.on('connection', (socket) => {
         } else {
           // 引き分けの場合
           io.to(socket.id).emit('draw', {
-            playerField: player.field,
-            opponentField: opponentPlayer.field
+            playerField: player.field.map(c => ({ ...c, hidden: false })),
+            opponentField: opponentPlayer.field.map(c => ({ ...c, hidden: true })),
+            hand: player.hand
           });
           
           io.to(opponent[0]).emit('draw', {
-            playerField: opponentPlayer.field,
-            opponentField: player.field
+            playerField: opponentPlayer.field.map(c => ({ ...c, hidden: false })),
+            opponentField: player.field.map(c => ({ ...c, hidden: true })),
+            hand: opponentPlayer.hand
           });
         }
       }
-
-      // カードの状態を更新
-      io.to(socket.id).emit('cardPlayed', {
-        card,
-        playerField: player.field,
-        opponentField: opponentPlayer.field
-      });
-
-      io.to(opponent[0]).emit('opponentCardPlayed', {
-        card,
-        playerField: opponentPlayer.field,
-        opponentField: player.field
-      });
     }
   });
 
