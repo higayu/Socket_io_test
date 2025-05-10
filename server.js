@@ -190,8 +190,9 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-const HOST = '192.168.3.56';
+const PORT = 3001;
+const HOST = '192.168.1.147';
+
 http.listen(PORT, HOST, () => {
   console.log(`サーバーが起動しました: http://${HOST}:${PORT}`);
-}); 
+});

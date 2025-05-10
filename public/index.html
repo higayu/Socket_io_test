@@ -185,7 +185,8 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const socket = io('');
+
         const joinBtn = document.getElementById('joinBtn');
         const status = document.getElementById('status');
         const playerHand = document.getElementById('playerHand');
