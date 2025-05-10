@@ -3,6 +3,35 @@
 ## 概要
 E-カードは、皇帝、奴隷、市民の3種類のカードを使用した対戦型カードゲームです。
 
+## サーバー側のデータ構造
+
+### GameGroupクラス
+ゲームの状態を管理するクラスです。
+
+#### プロパティ
+- `players`: Map - プレイヤーの状態管理
+- `waitingPlayers`: Array - 待機中のプレイヤー
+- `gameGroups`: Map - ゲームグループの管理
+
+#### メソッド
+- `addPlayer(socketId, playerState)`: プレイヤーを追加
+- `removePlayer(socketId)`: プレイヤーを削除
+- `createGameGroup(gameId, player1Id, player2Id)`: ゲームグループを作成
+- `getGameGroup(gameId)`: ゲームグループを取得
+- `getPlayerGameGroup(playerId)`: プレイヤーの所属するゲームグループを取得
+- `getOpponent(playerId)`: 対戦相手を取得
+
+### ゲームグループの構造
+```javascript
+{
+  gameId: string,
+  players: [player1Id, player2Id],
+  isActive: boolean,
+  currentTurn: string,
+  round: number
+}
+```
+
 ## カード情報の管理
 
 ### サーバー側での管理

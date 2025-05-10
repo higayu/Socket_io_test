@@ -12,6 +12,19 @@ class UI {
         this.score = document.getElementById('score');
         this.turnIndicator = document.getElementById('turnIndicator');
         this.status = document.getElementById('status');
+        this.gameId = document.getElementById('gameId');
+        this.round = document.getElementById('round');
+        this.gameStatus = document.getElementById('gameStatus');
+    }
+
+    // ゲーム情報の更新
+    updateGameInfo(gameId, round, status) {
+        if (gameId) this.gameId.textContent = `ゲームID: ${gameId}`;
+        if (round) this.round.textContent = `ラウンド: ${round}`;
+        if (status) {
+            this.gameStatus.textContent = status;
+            this.gameStatus.className = 'game-status ' + status.toLowerCase();
+        }
     }
 
     // スコアの更新
@@ -85,6 +98,17 @@ class UI {
             const cardElement = this.displayCard(card, true);
             this.opponentHand.appendChild(cardElement);
         });
+    }
+
+    // ターン表示の更新
+    updateTurnIndicator(isMyTurn) {
+        this.turnIndicator.textContent = isMyTurn ? 'あなたのターン' : '相手のターン';
+        this.turnIndicator.classList.toggle('hidden', !isMyTurn);
+    }
+
+    // ステータスの更新
+    updateStatus(message) {
+        this.status.textContent = message;
     }
 }
 
