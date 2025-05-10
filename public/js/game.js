@@ -66,10 +66,5 @@ function updateTurnIndicator(isFirst) {
         console.log('Setting opponent role to:', opponentRole);
         selectingCard.classList.add(opponentRole);
         selectingCard.classList.remove('hidden');
-    } else {
-        // 相手のターンの場合、選択中のカードを非表示
-        if (selectingCard) {
-            selectingCard.classList.add('hidden');
-        }
     }
 } 

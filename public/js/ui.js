@@ -8,6 +8,7 @@ class UI {
         this.opponentField = document.getElementById('opponentField');
         this.playerField = document.getElementById('playerField');
         this.playerHand = document.getElementById('playerHand');
+        this.opponentHand = document.getElementById('opponentHand');
         this.score = document.getElementById('score');
         this.turnIndicator = document.getElementById('turnIndicator');
         this.status = document.getElementById('status');
@@ -74,6 +75,16 @@ class UI {
         const roleElement = isOpponent ? this.opponentRole : this.playerRole;
         roleElement.textContent = isEmperor ? '皇帝' : '奴隷';
         roleElement.className = `role ${isEmperor ? 'emperor' : 'slave'}`;
+    }
+
+    // 相手の手札の更新
+    updateOpponentHand(cards) {
+        if (!cards) return;
+        this.opponentHand.innerHTML = '';
+        cards.forEach(card => {
+            const cardElement = this.displayCard(card, true);
+            this.opponentHand.appendChild(cardElement);
+        });
     }
 }
 

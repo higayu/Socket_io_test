@@ -29,6 +29,9 @@ socket.on('gameStart', (data) => {
     isEmperor = data.isEmperor;  // プレイヤーの役職を保存
     console.log('Game Start - Player is Emperor:', isEmperor);
     updateHand(data.hand);
+    if (data.opponentHand) {
+        ui.updateOpponentHand(data.opponentHand);
+    }
     playerRole.textContent = data.isEmperor ? 'あなたは皇帝です' : 'あなたは奴隷です';
     playerRole.className = `role ${data.isEmperor ? 'emperor' : 'slave'}`;
     opponentRole.textContent = data.isEmperor ? '相手は奴隷です' : '相手は皇帝です';
@@ -40,8 +43,26 @@ socket.on('cardPlayed', (data) => {
     const cardElement = createCardElement(data.card);
     cardElement.classList.add('card-played');
     updateField(playerField, data.playerField);
-    updateField(opponentArea, data.opponentField);
-    updateHand(data.hand);
+    // 相手のフィールドのカードをopponentAreaに直接表示
+    const opponentCards = data.opponentField || [];
+    opponentArea.innerHTML = '';
+    // 選択表示を再作成
+    const selectingCard = document.createElement('div');
+    selectingCard.className = `card selecting ${isEmperor ? 'slave' : 'emperor'}`;
+    selectingCard.innerHTML = `
+        <div class="card-name">選択中...</div>
+        <div class="card-description">相手がカードを選んでいます</div>
+    `;
+    opponentArea.appendChild(selectingCard);
+    // フィールドのカードを表示
+    opponentCards.forEach(card => {
+        const cardElement = createCardElement(card);
+        opponentArea.appendChild(cardElement);
+    });
+    // 手札を表示
+    if (data.opponentHand) {
+        ui.updateOpponentHand(data.opponentHand);
+    }
     updateTurnIndicator(false);
 });
 
@@ -49,15 +70,48 @@ socket.on('opponentCardPlayed', (data) => {
     const cardElement = createCardElement(data.card);
     cardElement.classList.add('card-played');
     updateField(playerField, data.playerField);
-    updateField(opponentArea, data.opponentField);
-    updateHand(data.hand);
+    // 相手のフィールドのカードをopponentAreaに直接表示
+    const opponentCards = data.opponentField || [];
+    opponentArea.innerHTML = '';
+    // 選択表示を再作成
+    const selectingCard = document.createElement('div');
+    selectingCard.className = `card selecting ${isEmperor ? 'slave' : 'emperor'}`;
+    selectingCard.innerHTML = `
+        <div class="card-name">選択中...</div>
+        <div class="card-description">相手がカードを選んでいます</div>
+    `;
+    opponentArea.appendChild(selectingCard);
+    // フィールドのカードを表示
+    opponentCards.forEach(card => {
+        const cardElement = createCardElement(card);
+        opponentArea.appendChild(cardElement);
+    });
+    // 手札を表示
+    if (data.opponentHand) {
+        ui.updateOpponentHand(data.opponentHand);
+    }
     updateTurnIndicator(true);
 });
 
 socket.on('draw', (data) => {
     status.textContent = '引き分け！もう一度カードを出してください';
     updateField(playerField, data.playerField);
-    updateField(opponentArea, data.opponentField);
+    // 相手のフィールドのカードをopponentAreaに直接表示
+    const opponentCards = data.opponentField || [];
+    opponentArea.innerHTML = '';
+    // 選択表示を再作成
+    const selectingCard = document.createElement('div');
+    selectingCard.className = `card selecting ${isEmperor ? 'slave' : 'emperor'}`;
+    selectingCard.innerHTML = `
+        <div class="card-name">選択中...</div>
+        <div class="card-description">相手がカードを選んでいます</div>
+    `;
+    opponentArea.appendChild(selectingCard);
+    // フィールドのカードを表示
+    opponentCards.forEach(card => {
+        const cardElement = createCardElement(card);
+        opponentArea.appendChild(cardElement);
+    });
     updateHand(data.hand);
 });
 
@@ -81,7 +135,22 @@ socket.on('gameOver', (data) => {
 
 socket.on('revealCards', (data) => {
     updateField(playerField, data.playerField);
-    updateField(opponentArea, data.opponentField);
+    // 相手のフィールドのカードをopponentAreaに直接表示
+    const opponentCards = data.opponentField || [];
+    opponentArea.innerHTML = '';
+    // 選択表示を再作成
+    const selectingCard = document.createElement('div');
+    selectingCard.className = `card selecting ${isEmperor ? 'slave' : 'emperor'}`;
+    selectingCard.innerHTML = `
+        <div class="card-name">選択中...</div>
+        <div class="card-description">相手がカードを選んでいます</div>
+    `;
+    opponentArea.appendChild(selectingCard);
+    // フィールドのカードを表示
+    opponentCards.forEach(card => {
+        const cardElement = createCardElement(card);
+        opponentArea.appendChild(cardElement);
+    });
 });
 
 socket.on('opponentSelecting', (data) => {
