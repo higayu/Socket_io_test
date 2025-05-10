@@ -3,42 +3,14 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
+const { createPlayerState } = require('./src/game/game');
+const { playCard } = require('./src/game/playManager');
+
 app.use(express.static('public'));
 
 // プレイヤーの状態を管理
 const players = new Map();
 const waitingPlayers = [];
-
-// カードの定義
-const cards = [
-  { id: 1, name: '皇帝', type: 'emperor', description: '市民に勝つ', isSpecial: true },
-  { id: 2, name: '奴隷', type: 'slave', description: '皇帝に勝つ', isSpecial: true },
-  { id: 3, name: '市民', type: 'citizen', description: '奴隷に勝つ' }
-];
-
-// プレイヤーの初期状態
-const createPlayerState = (isEmperor) => ({
-  hand: isEmperor ? 
-    [{ id: 1, name: '皇帝', type: 'emperor', description: '市民に勝つ', isSpecial: true },
-     ...Array(4).fill({ id: 3, name: '市民', type: 'citizen', description: '奴隷に勝つ' })] :
-    [{ id: 2, name: '奴隷', type: 'slave', description: '皇帝に勝つ', isSpecial: true },
-     ...Array(4).fill({ id: 3, name: '市民', type: 'citizen', description: '奴隷に勝つ' })],
-  field: [],
-  isEmperor: isEmperor,
-  isFirst: false,
-  score: 0
-});
-
-// 勝敗判定
-function determineWinner(card1, card2) {
-  if (card1.type === card2.type) return 'draw';
-  
-  if (card1.type === 'emperor' && card2.type === 'citizen') return 'player1';
-  if (card1.type === 'citizen' && card2.type === 'slave') return 'player1';
-  if (card1.type === 'slave' && card2.type === 'emperor') return 'player1';
-  
-  return 'player2';
-}
 
 io.on('connection', (socket) => {
   console.log('ユーザーが接続しました:', socket.id);
@@ -61,11 +33,13 @@ io.on('connection', (socket) => {
       
       players.set(socket.id, { 
         gameId, 
+        socketId: socket.id,
         ...player1State
       });
       
       players.set(opponent, { 
         gameId, 
+        socketId: opponent,
         ...player2State
       });
       
@@ -94,90 +68,8 @@ io.on('connection', (socket) => {
   socket.on('playCard', (cardIndex) => {
     const player = players.get(socket.id);
     if (!player) return;
-
-    const card = player.hand[cardIndex];
-    if (!card) return;
-
-    // カードを手札から場に出す
-    player.hand.splice(cardIndex, 1);
-    player.field.push(card);
-
-    // 相手に通知
-    const opponent = Array.from(players.entries())
-      .find(([id, p]) => p.gameId === player.gameId && id !== socket.id);
     
-    if (opponent) {
-      const opponentPlayer = players.get(opponent[0]);
-      
-      // カードの状態を更新
-      io.to(socket.id).emit('cardPlayed', {
-        card,
-        playerField: player.field,
-        opponentField: opponentPlayer.field.map(c => ({ ...c, hidden: false })),
-        hand: player.hand
-      });
-
-      io.to(opponent[0]).emit('opponentCardPlayed', {
-        card: { ...card, hidden: true }, // 相手のカードは裏向き
-        playerField: opponentPlayer.field.map(c => ({ ...c, hidden: false })),
-        opponentField: player.field.map(c => ({ ...c, hidden: true })), // 相手のフィールドは裏向き
-        hand: opponentPlayer.hand
-      });
-
-      // 両者がカードを出した場合のみ勝敗判定
-      if (player.field.length > 0 && opponentPlayer.field.length > 0) {
-        const playerCard = player.field[player.field.length - 1];
-        const opponentCard = opponentPlayer.field[opponentPlayer.field.length - 1];
-        
-        const result = determineWinner(playerCard, opponentCard);
-        
-        if (result !== 'draw') {
-          // 勝敗が決まった場合
-          const winner = result === 'player1' ? socket.id : opponent[0];
-          const winningPlayer = players.get(winner);
-          const isSlaveWin = winningPlayer.isEmperor === false;
-          
-          // スコア加算（奴隷側の勝利は5倍）
-          winningPlayer.score += isSlaveWin ? 5 : 1;
-          
-          // 勝敗が決まったら両者のカードを公開
-          io.to(socket.id).emit('revealCards', {
-            playerField: player.field.map(c => ({ ...c, hidden: false })),
-            opponentField: opponentPlayer.field.map(c => ({ ...c, hidden: false }))
-          });
-          
-          io.to(opponent[0]).emit('revealCards', {
-            playerField: opponentPlayer.field.map(c => ({ ...c, hidden: false })),
-            opponentField: player.field.map(c => ({ ...c, hidden: false }))
-          });
-          
-          io.to(socket.id).emit('gameOver', { 
-            won: winner === socket.id, 
-            score: player.score,
-            reason: isSlaveWin ? '奴隷の勝利！報酬5倍！' : '皇帝の勝利！'
-          });
-          
-          io.to(opponent[0]).emit('gameOver', { 
-            won: winner === opponent[0], 
-            score: opponentPlayer.score,
-            reason: isSlaveWin ? '奴隷の勝利！報酬5倍！' : '皇帝の勝利！'
-          });
-        } else {
-          // 引き分けの場合
-          io.to(socket.id).emit('draw', {
-            playerField: player.field.map(c => ({ ...c, hidden: false })),
-            opponentField: opponentPlayer.field.map(c => ({ ...c, hidden: true })),
-            hand: player.hand
-          });
-          
-          io.to(opponent[0]).emit('draw', {
-            playerField: opponentPlayer.field.map(c => ({ ...c, hidden: false })),
-            opponentField: player.field.map(c => ({ ...c, hidden: true })),
-            hand: opponentPlayer.hand
-          });
-        }
-      }
-    }
+    playCard(player, cardIndex, players, io);
   });
 
   // 切断時の処理
