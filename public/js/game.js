@@ -1,5 +1,6 @@
 let score = 0;
 let isMyTurn = false;
+let isEmperor = false;  // プレイヤーが皇帝かどうかのフラグを追加
 
 function createCardElement(card) {
     const cardElement = document.createElement('div');
@@ -56,6 +57,14 @@ function updateTurnIndicator(isFirst) {
             `;
             opponentArea.insertBefore(selectingCard, opponentArea.firstChild);
         }
+
+        // 相手の役職に応じてクラスを更新
+        selectingCard.classList.remove('emperor', 'slave');
+        // プレイヤーが皇帝なら相手は奴隷、プレイヤーが奴隷なら相手は皇帝
+        const opponentRole = isEmperor ? 'slave' : 'emperor';
+        console.log('Player is Emperor:', isEmperor);
+        console.log('Setting opponent role to:', opponentRole);
+        selectingCard.classList.add(opponentRole);
         selectingCard.classList.remove('hidden');
     } else {
         // 相手のターンの場合、選択中のカードを非表示

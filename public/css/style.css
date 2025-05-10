@@ -156,14 +156,21 @@ body {
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
 }
 .card.selecting {
-    background-color: #ffd700;
-    border-color: #ffd700;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
+}
+.card.selecting.emperor {
+    background-color: #ffd700;
+    border-color: #ffd700;
+}
+.card.selecting.slave {
+    background-color: #8b4513;
+    border-color: #8b4513;
+    color: white;
 }
 .card.selecting.hidden::after {
     content: '選択中...';

@@ -26,6 +26,8 @@ socket.on('waiting', () => {
 socket.on('gameStart', (data) => {
     status.textContent = 'ゲーム開始！';
     isMyTurn = data.isFirst;
+    isEmperor = data.isEmperor;  // プレイヤーの役職を保存
+    console.log('Game Start - Player is Emperor:', isEmperor);
     updateHand(data.hand);
     playerRole.textContent = data.isEmperor ? 'あなたは皇帝です' : 'あなたは奴隷です';
     playerRole.className = `role ${data.isEmperor ? 'emperor' : 'slave'}`;
