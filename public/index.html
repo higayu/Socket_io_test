@@ -27,12 +27,14 @@
         <button id="joinBtn" class="btn">ゲームに参加</button>
     </div>
     <div id="status" class="status"></div>
-    <button onclick="document.getElementById('bgm').play()">BGM再生</button>
+    <button onclick="controls.toggleBGM(true)">BGM再生</button>
     <label for="volumeControl">音量:</label>
     <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.5">
     <audio id="bgm" src="assets/bgm.mp3" autoplay loop></audio>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/controls.js"></script>
     <script src="js/game.js"></script>
     <script src="js/socket.js"></script>
     <script src="js/audio.js"></script>
