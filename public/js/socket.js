@@ -5,7 +5,7 @@ const joinBtn = document.getElementById('joinBtn');
 const status = document.getElementById('status');
 const playerHand = document.getElementById('playerHand');
 const playerField = document.getElementById('playerField');
-const opponentField = document.getElementById('opponentField');
+const opponentArea = document.getElementById('opponentArea');
 const scoreDisplay = document.getElementById('score');
 const playerRole = document.getElementById('playerRole');
 const opponentRole = document.getElementById('opponentRole');
@@ -40,7 +40,7 @@ socket.on('cardPlayed', (data) => {
     const cardElement = createCardElement(data.card);
     cardElement.classList.add('card-played');
     updateField(playerField, data.playerField);
-    updateField(opponentField, data.opponentField);
+    updateField(opponentArea, data.opponentField);
     updateHand(data.hand);
     updateTurnIndicator(false);
 });
@@ -49,7 +49,7 @@ socket.on('opponentCardPlayed', (data) => {
     const cardElement = createCardElement(data.card);
     cardElement.classList.add('card-played');
     updateField(playerField, data.playerField);
-    updateField(opponentField, data.opponentField);
+    updateField(opponentArea, data.opponentField);
     updateHand(data.hand);
     updateTurnIndicator(true);
 });
@@ -57,7 +57,7 @@ socket.on('opponentCardPlayed', (data) => {
 socket.on('draw', (data) => {
     status.textContent = '引き分け！もう一度カードを出してください';
     updateField(playerField, data.playerField);
-    updateField(opponentField, data.opponentField);
+    updateField(opponentArea, data.opponentField);
     updateHand(data.hand);
 });
 
@@ -74,17 +74,17 @@ socket.on('gameOver', (data) => {
     setTimeout(() => {
         status.textContent = '新しいラウンドを開始します...';
         playerField.innerHTML = '';
-        opponentField.innerHTML = '';
+        opponentArea.innerHTML = '';
         turnIndicator.classList.add('hidden');
     }, 3000);
 });
 
 socket.on('revealCards', (data) => {
     updateField(playerField, data.playerField);
-    updateField(opponentField, data.opponentField);
+    updateField(opponentArea, data.opponentField);
 });
 
 socket.on('opponentSelecting', (data) => {
     console.log('Opponent selecting:', data);
-    updateField(opponentField, data.opponentField);
+    updateField(opponentArea, data.opponentField);
 }); 
