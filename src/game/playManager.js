@@ -16,7 +16,7 @@ function playCard(player, cardIndex, players, io) {
   if (opponent) {
     const opponentPlayer = players.get(opponent[0]);
     
-    // カードの状態を更新
+    // 先攻プレイヤーには自分のカードを表向きで通知
     io.to(player.socketId).emit('cardPlayed', {
       card,
       playerField: player.field,
@@ -24,16 +24,33 @@ function playCard(player, cardIndex, players, io) {
       hand: player.hand
     });
 
+    // 後攻プレイヤーには先攻プレイヤーのカードを伏せた状態で通知
     io.to(opponent[0]).emit('opponentCardPlayed', {
-      card: { ...card, hidden: true }, // 相手のカードは裏向き
+      card: { ...card, hidden: true },
       playerField: opponentPlayer.field.map(c => ({ ...c, hidden: false })),
-      opponentField: player.field.map(c => ({ ...c, hidden: true })), // 相手のフィールドは裏向き
+      opponentField: player.field.map(c => ({ ...c, hidden: true })),
       hand: opponentPlayer.hand
+    });
+
+    // 相手がカードを選んでいる状態を通知
+    io.to(opponent[0]).emit('opponentSelecting', {
+      opponentField: [{ type: 'selecting', hidden: true }]
     });
 
     // 両者がカードを出した場合のみ勝敗判定
     if (player.field.length > 0 && opponentPlayer.field.length > 0) {
-      handleRoundResult(player, opponentPlayer, players, io);
+      // 後攻プレイヤーのカードを伏せた状態で通知
+      io.to(player.socketId).emit('opponentCardPlayed', {
+        card: { ...opponentPlayer.field[opponentPlayer.field.length - 1], hidden: true },
+        playerField: player.field.map(c => ({ ...c, hidden: false })),
+        opponentField: opponentPlayer.field.map(c => ({ ...c, hidden: true })),
+        hand: player.hand
+      });
+
+      // 少し遅延を入れてからカードを表向きにする
+      setTimeout(() => {
+        handleRoundResult(player, opponentPlayer, players, io);
+      }, 1000); // 1秒後にカードを表向きにする
     }
   }
 }
